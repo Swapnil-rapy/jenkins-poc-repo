@@ -6,7 +6,7 @@ phases:
       - echo Logging in to Amazon ECR...
       - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       - AWS_REGION=ap-south-1
-      - ECR_REPOSITORY=jenkins-python-agent
+      - ECR_REPOSITORY=jenkins/jenkins-eks-poc
       - ECR_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}
       - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_URI}
 
