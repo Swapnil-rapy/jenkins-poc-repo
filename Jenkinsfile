@@ -1,3 +1,4 @@
+```groovy
 pipeline {
     agent {
         kubernetes {
@@ -22,6 +23,7 @@ pipeline {
                     pip3 --version
                     git --version
                     java -version
+                    kubectl version --client
                 '''
             }
         }
@@ -47,13 +49,13 @@ pipeline {
         }
 
         stage('Deploy to EKS') {
-    steps {
-        sh '''
-            set -e
+            steps {
+                sh '''
+                    set -e
 
-            echo "===== Deploying to EKS ====="
+                    echo "===== Deploying to EKS ====="
 
-            cat <<'EOF' > deployment.yaml
+                    cat <<'EOF' > deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -89,51 +91,64 @@ spec:
       targetPort: 80
 EOF
 
-            echo "Applying Kubernetes manifest..."
-            kubectl apply -f deployment.yaml
+                    echo "===== Kubernetes Manifest ====="
+                    cat deployment.yaml
 
-            echo "Waiting for rollout..."
-            kubectl rollout status deployment/poc-app \
-              -n poc-app \
-              --timeout=180s
-        '''
+                    echo "===== Applying Kubernetes Manifest ====="
+                    kubectl apply -f deployment.yaml
+
+                    echo "===== Waiting for Rollout ====="
+                    kubectl rollout status deployment/poc-app \
+                      -n poc-app \
+                      --timeout=180s
+                '''
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                sh '''
+                    set -e
+
+                    echo "===== Deployment Status ====="
+
+                    kubectl get deployment poc-app -n poc-app
+
+                    echo "===== Pods ====="
+
+                    kubectl get pods -n poc-app -l app=poc-app
+
+                    echo "===== Service ====="
+
+                    kubectl get service poc-app -n poc-app
+
+                    echo "===== Deployment Verification ====="
+
+                    kubectl wait \
+                      --for=condition=available \
+                      deployment/poc-app \
+                      -n poc-app \
+                      --timeout=180s
+
+                    echo "Deployment verification successful"
+                '''
+            }
+        }
     }
-}
-
-stage('Verify Deployment') {
-    steps {
-        sh '''
-            set -e
-
-            echo "===== Deployment Status ====="
-
-            kubectl get deployment poc-app -n poc-app
-
-            echo "===== Pods ====="
-
-            kubectl get pods -n poc-app -l app=poc-app
-
-            echo "===== Service ====="
-
-            kubectl get service poc-app -n poc-app
-
-            echo "===== Deployment Verification ====="
-
-            kubectl wait \
-              --for=condition=available \
-              deployment/poc-app \
-              -n poc-app \
-              --timeout=180s
-
-            echo "Deployment verification successful"
-        '''
-    }
-}
-
 
     post {
         always {
             echo 'CI/CD pipeline completed'
         }
+
+        success {
+            echo 'CI/CD pipeline completed successfully'
+        }
+
+        failure {
+            echo 'CI/CD pipeline failed'
+        }
     }
 }
+```
+
