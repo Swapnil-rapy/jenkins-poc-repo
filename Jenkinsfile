@@ -1,4 +1,3 @@
-```groovy
 pipeline {
     agent {
         kubernetes {
@@ -150,5 +149,5 @@ EOF
         }
     }
 }
-```
+
 
