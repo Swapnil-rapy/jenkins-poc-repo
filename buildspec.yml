@@ -14,7 +14,7 @@ phases:
     commands:
       - echo Building Jenkins Python agent image...
       - docker build -t ${ECR_URI}:v3 .
-      - docker tag ${ECR_URI}:v2 ${ECR_URI}:latest
+      - docker tag ${ECR_URI}:v3 ${ECR_URI}:latest
 
   post_build:
     commands:
